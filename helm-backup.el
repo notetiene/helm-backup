@@ -69,6 +69,11 @@
   :group 'helm-backup
   :type '(repeat regexp))
 
+(defcustom helm-backup-confirmation-function 'y-or-n-p
+  "Function to call for asking confirmation."
+  :group 'helm-backup
+  :type 'function)
+
 (defconst helm-backup--git-remove-file-commits-command
   (concat "filter-branch --force --index-filter "
           "'git rm --cached --ignore-unmatch %s' "
@@ -221,7 +226,8 @@
 
 (defun helm-backup-combine-backups (&optional file)
   "Combine all backups for FILE into one."
-  (when (y-or-n-p "Are you sure to combine backups (backups will be lost)? ")
+  (when (funcall helm-backup-confirmation-function
+                 "Are you sure to combine backups (backups will be lost)? ")
     (unless file
       (setq file (buffer-file-name)))
     (helm-backup-remove-file file)
