@@ -69,6 +69,15 @@
   :group 'helm-backup
   :type '(repeat regexp))
 
+(defun helm-backup--helm-option-candidates (&optional file)
+  "Return a set of options for the given FILE."
+  (unless file
+    (setq file (buffer-file-name)))
+  (let* ((file (file-name-nondirectory file))
+         (opts (list (cons (format "Backup \"%s\"" file)
+                           (cons 'backup file)))))
+    opts))
+
 (defun helm-backup-init-git-repository ()
   "Initialize git repository."
   (unless (file-directory-p helm-backup-path)
@@ -207,7 +216,12 @@
                                        (with-helm-current-buffer
                                          (helm-backup-replace-current-buffer candidate (buffer-file-name))))))
                          :candidate-number-limit 9999
-                         :fuzzy-match t))
+                         :fuzzy-match t)
+                       (helm-build-sync-source "Options"
+                         :candidates (helm-backup--helm-option-candidates file)
+                         :action 'identity
+                         :candidate-number-limit 9999
+                         :volatile t))
         :buffer "*Helm Backup*"
         :prompt "Backup: "))
 
@@ -215,12 +229,10 @@
 (defun helm-backup ()
   "Main function used to call `helm-backup'."
   (interactive)
-
-  (let ((helm-quit-if-no-candidate
-         (lambda ()
-           (error
-            "No filename associated with buffer, file has no backup yet or filename is blacklisted"))))
-    (helm-backup-source (buffer-file-name))))
+  (let ((completion (helm-backup-source (buffer-file-name))))
+    (pcase completion
+      (backup (helm-backup-versioning))
+      (t (error "Unknown action")))))
 
 (eval-after-load "helm-backup"
   '(progn
