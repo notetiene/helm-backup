@@ -104,7 +104,9 @@ Possible values are:
                  ,@(unless (eq helm-backup-combine-confirm 'disable)
                      (cons (cons (format "Combine “%s” backups" file)
                                  (cons 'combine file))
-                           nil)))))
+                           nil))
+                 ,(cons (format "Remove “%s” backups" file)
+                        (cons 'remove file)))))
     opts))
 
 (defun helm-backup-init-git-repository ()
@@ -280,11 +282,13 @@ Possible values are:
 (defun helm-backup ()
   "Main function used to call `helm-backup'."
   (interactive)
-  (let ((completion (helm-backup-source (buffer-file-name))))
+  (let* ((file (buffer-file-name))
+         (completion (helm-backup-source file)))
     (pcase (car completion)
       (`backup (helm-backup-versioning))
       (`clean  (helm-backup-clean-repository))
-      (`combine  (helm-backup-combine-backups))
+      (`combine (helm-backup-combine-backups))
+      (`remove  (helm-backup-remove-file file))
       (_ (error "Unknown completion")))))
 
 (eval-after-load "helm-backup"
