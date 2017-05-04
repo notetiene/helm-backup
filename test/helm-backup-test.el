@@ -40,7 +40,7 @@
   )
 
 (ert-deftest helm-backup-init-git-repository-test ()
-  (test-wrapper 
+  (test-wrapper
    (lambda ()
      ;; invoking command create a git repository
      (helm-backup-init-git-repository)
@@ -83,7 +83,7 @@
   )
 
 (ert-deftest helm-backup-exec-git-command-test ()
-  (test-wrapper 
+  (test-wrapper
    (lambda ()
      ;; we can do any git command in backup repository
      (call-process-shell-command helm-backup-git-binary nil nil nil "init" backup-folder-test-repository)
@@ -96,7 +96,7 @@
   )
 
 (ert-deftest helm-backup-copy-file-to-repository-test ()
-  (test-wrapper 
+  (test-wrapper
    (lambda ()
      ;; copy a file to backup repository recreating tree
      (call-process-shell-command helm-backup-git-binary nil nil nil "init" backup-folder-test-repository)
@@ -108,7 +108,7 @@
   )
 
 (ert-deftest helm-backup-version-file-test ()
-  (test-wrapper 
+  (test-wrapper
    (lambda ()
      (call-process-shell-command helm-backup-git-binary nil nil nil "init" backup-folder-test-repository nil nil)
      ;; version file
@@ -132,7 +132,7 @@
   )
 
 (ert-deftest helm-backup-list-file-change-time-test ()
-  (test-wrapper 
+  (test-wrapper
    (lambda ()
      ;; nil value
      (should (eq (helm-backup-list-file-change-time nil) nil))
@@ -224,9 +224,9 @@
      (shell-command (combine-and-quote-strings (list "cd" backup-folder-test-repository "&&" helm-backup-git-binary "add" "fake-file" "&&" helm-backup-git-binary "commit" "-m" "' '")))
 
      (let* ((commit-id (car (split-string (shell-command-to-string (combine-and-quote-strings (list "cd" backup-folder-test-repository "&&" helm-backup-git-binary "log" "-1" "--oneline"))) " ")))
-           (buffer (helm-backup-create-backup-buffer commit-id "/fake-file"))
-           (data nil)
-           )
+            (buffer (helm-backup-create-backup-buffer commit-id "/fake-file"))
+            (data nil)
+            )
        ;; nil value
        (should (eql (helm-backup-create-backup-buffer nil nil) nil))
        ;; wrong id
