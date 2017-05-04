@@ -75,7 +75,9 @@
     (setq file (buffer-file-name)))
   (let* ((file (file-name-nondirectory file))
          (opts (list (cons (format "Backup \"%s\"" file)
-                           (cons 'backup file)))))
+                           (cons 'backup file))
+                     (cons (format "Clean \"%s\" backups" file)
+                           (cons 'clean file)))))
     opts))
 
 (defun helm-backup-init-git-repository ()
@@ -230,9 +232,10 @@
   "Main function used to call `helm-backup'."
   (interactive)
   (let ((completion (helm-backup-source (buffer-file-name))))
-    (pcase completion
-      (backup (helm-backup-versioning))
-      (t (error "Unknown action")))))
+    (pcase (car completion)
+      (`backup (helm-backup-versioning))
+      (`clean  (helm-backup-clean-repository))
+      (_ (error "Unknown completion")))))
 
 (eval-after-load "helm-backup"
   '(progn
