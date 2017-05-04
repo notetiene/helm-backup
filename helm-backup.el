@@ -69,6 +69,12 @@
   :group 'helm-backup
   :type '(repeat regexp))
 
+(defconst helm-backup--git-remove-file-commits-command
+  (concat "filter-branch --force --index-filter "
+          "'git rm --cached --ignore-unmatch %s' "
+          "--prune-empty --tag-name-filter cat -- --all")
+  "Git command to remove all commits for a given file.")
+
 (defun helm-backup--helm-option-candidates (&optional file)
   "Return a set of options for the given FILE."
   (unless file
@@ -77,7 +83,9 @@
          (opts (list (cons (format "Backup \"%s\"" file)
                            (cons 'backup file))
                      (cons (format "Clean \"%s\" backups" file)
-                           (cons 'clean file)))))
+                           (cons 'clean file))
+                     (cons (format "Combine \"%s\" backups" file)
+                           (cons 'combine file)))))
     opts))
 
 (defun helm-backup-init-git-repository ()
@@ -201,6 +209,24 @@
     (ediff-buffers (buffer-name backup-buffer)
                    (buffer-name buffer))))
 
+(defun helm-backup--remove-file-commits (file)
+  "Remove commits history for FILE."
+  (let ((command (format helm-backup--git-remove-file-commits-command file)))
+    (helm-backup-exec-git-command (split-string command))))
+
+(defun helm-backup-remove-file (file)
+  "Remove FILE from the backup history."
+  (let ((file (helm-backup-transform-filename-for-git file)))
+    (helm-backup--remove-file-commits file)))
+
+(defun helm-backup-combine-backups (&optional file)
+  "Combine all backups for FILE into one."
+  (when (y-or-n-p "Are you sure to combine backups (backups will be lost)? ")
+    (unless file
+      (setq file (buffer-file-name)))
+    (helm-backup-remove-file file)
+    (helm-backup-version-file file)))
+
 (defun helm-backup-source (file)
   "Source used to populate buffer according to FILE."
   (helm :sources (list (helm-build-sync-source
@@ -235,6 +261,7 @@
     (pcase (car completion)
       (`backup (helm-backup-versioning))
       (`clean  (helm-backup-clean-repository))
+      (`combine  (helm-backup-combine-backups))
       (_ (error "Unknown completion")))))
 
 (eval-after-load "helm-backup"
