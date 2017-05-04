@@ -77,9 +77,9 @@ Possible values are:
   confirm - Ask confirmation for combining backups
   disable - Don’t allow combining backups"
   :group 'helm-backup
-  :type '(choice (const :tag "Don’t ask" 'no-confirm)
-                 (const :tag "Ask confirmation" 'confirm)
-                 (const :tag "Disable" 'disable)))
+  :type '(radio (const :tag "Ask confirmation" confirm)
+                (const :tag "Don’t ask" no-confirm)
+                (const :tag "Disable" disable)))
 
 (defcustom helm-backup-confirmation-function 'y-or-n-p
   "Function to call for asking confirmation."
