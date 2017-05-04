@@ -65,7 +65,7 @@
 /home/user/password => exclude password in /home/user
 .*\\.el$ => exclude .el extension
 /root/.* => exclude everything inside root
-.*/password/.* => exclude all folders with name 'password'"
+.*/password/.* => exclude all folders with name `password'"
   :group 'helm-backup
   :type '(repeat regexp))
 
@@ -85,11 +85,11 @@
   (unless file
     (setq file (buffer-file-name)))
   (let* ((file (file-name-nondirectory file))
-         (opts (list (cons (format "Backup \"%s\"" file)
+         (opts (list (cons (format "Backup “%s”" file)
                            (cons 'backup file))
-                     (cons (format "Clean \"%s\" backups" file)
+                     (cons (format "Clean “%s” backups" file)
                            (cons 'clean file))
-                     (cons (format "Combine \"%s\" backups" file)
+                     (cons (format "Combine “%s” backups" file)
                            (cons 'combine file)))))
     opts))
 
