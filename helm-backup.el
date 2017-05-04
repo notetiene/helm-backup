@@ -69,6 +69,18 @@
   :group 'helm-backup
   :type '(repeat regexp))
 
+(defcustom helm-backup-combine-confirm 'confirm
+  "Whether to show confirmation when combining backups.
+
+Possible values are:
+  no-confirm - Don’t ask confirmation for combining backups
+  confirm - Ask confirmation for combining backups
+  disable - Don’t allow combining backups"
+  :group 'helm-backup
+  :type '(choice (const :tag "Don’t ask" 'no-confirm)
+                 (const :tag "Ask confirmation" 'confirm)
+                 (const :tag "Disable" 'disable)))
+
 (defcustom helm-backup-confirmation-function 'y-or-n-p
   "Function to call for asking confirmation."
   :group 'helm-backup
@@ -85,12 +97,14 @@
   (unless file
     (setq file (buffer-file-name)))
   (let* ((file (file-name-nondirectory file))
-         (opts (list (cons (format "Backup “%s”" file)
-                           (cons 'backup file))
-                     (cons (format "Clean “%s” backups" file)
-                           (cons 'clean file))
-                     (cons (format "Combine “%s” backups" file)
-                           (cons 'combine file)))))
+         (opts `(,(cons (format "Backup “%s”" file)
+                        (cons 'backup file))
+                 ,(cons (format "Clean “%s” backups" file)
+                        (cons 'clean file))
+                 ,@(unless (eq helm-backup-combine-confirm 'disable)
+                     (cons (cons (format "Combine “%s” backups" file)
+                                 (cons 'combine file))
+                           nil)))))
     opts))
 
 (defun helm-backup-init-git-repository ()
@@ -216,8 +230,10 @@
 
 (defun helm-backup--remove-file-commits (file)
   "Remove commits history for FILE."
-  (let ((command (format helm-backup--git-remove-file-commits-command file)))
-    (helm-backup-exec-git-command (split-string command))))
+  (if (eq helm-backup-combine-confirm 'disable)
+      (user-error "Combining backups is disabled according to `helm-backup-combine-confirm'")
+    (let ((command (format helm-backup--git-remove-file-commits-command file)))
+      (helm-backup-exec-git-command (split-string command)))))
 
 (defun helm-backup-remove-file (file)
   "Remove FILE from the backup history."
@@ -226,8 +242,9 @@
 
 (defun helm-backup-combine-backups (&optional file)
   "Combine all backups for FILE into one."
-  (when (funcall helm-backup-confirmation-function
-                 "Are you sure to combine backups (backups will be lost)? ")
+  (when (or (eq helm-backup-combine-confirm 'no-confirm)
+            (funcall helm-backup-confirmation-function
+                     "Are you sure to combine backups (backups will be lost)? "))
     (unless file
       (setq file (buffer-file-name)))
     (helm-backup-remove-file file)
