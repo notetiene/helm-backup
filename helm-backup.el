@@ -190,30 +190,37 @@
     (ediff-buffers (buffer-name backup-buffer)
                    (buffer-name buffer))))
 
-(defun helm-backup-source ()
-  "Source used to populate buffer."
-  `((name . ,(format "Backup for %s" (buffer-file-name)))
-    (candidates . ,(helm-backup-list-file-change-time (buffer-file-name)))
-    (action ("Ediff file with backup" .
-             ,(lambda (candidate)
-                (helm-backup-create-ediff candidate (current-buffer))))
-            ("Open in new buffer" .
-             ,(lambda (candidate)
-                (helm-backup-open-in-new-buffer candidate (buffer-file-name))))
-            ("Replace current buffer" .
-             ,(lambda (candidate)
-               (with-helm-current-buffer
-                 (helm-backup-replace-current-buffer candidate (buffer-file-name))))))))
+(defun helm-backup-source (file)
+  "Source used to populate buffer according to FILE."
+  (helm :sources (list (helm-build-sync-source
+                           (format "Backup for “%s”"
+                                   file)
+                         :candidates (helm-backup-list-file-change-time file)
+                         :action `(("Ediff file with backup" .
+                                    ,(lambda (candidate)
+                                       (helm-backup-create-ediff candidate (current-buffer))))
+                                   ("Open in new buffer" .
+                                    ,(lambda (candidate)
+                                       (helm-backup-open-in-new-buffer candidate (buffer-file-name))))
+                                   ("Replace current buffer" .
+                                    ,(lambda (candidate)
+                                       (with-helm-current-buffer
+                                         (helm-backup-replace-current-buffer candidate (buffer-file-name))))))
+                         :candidate-number-limit 9999
+                         :fuzzy-match t))
+        :buffer "*Helm Backup*"
+        :prompt "Backup: "))
 
 ;;;###autoload
 (defun helm-backup ()
-  "Main function used to call `helm-backup`."
+  "Main function used to call `helm-backup'."
   (interactive)
+
   (let ((helm-quit-if-no-candidate
          (lambda ()
            (error
             "No filename associated with buffer, file has no backup yet or filename is blacklisted"))))
-    (helm-other-buffer (helm-backup-source) "*Helm Backup*")))
+    (helm-backup-source (buffer-file-name))))
 
 (eval-after-load "helm-backup"
   '(progn
